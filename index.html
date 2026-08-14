@@ -1,0 +1,771 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#173c78" />
+  <title>Feller's Espresso Wagon Menu</title>
+  <style>
+    :root{
+      --navy:#173c78; --red:#c83b3b; --green:#245f45; --cream:#f7f3ea;
+      --paper:#fffefa; --ink:#1f2933; --muted:#66727f; --line:#e5e1d8;
+      --gold:#b8843d; --shadow:0 12px 32px rgba(27,43,61,.09);
+    }
+    *{box-sizing:border-box}
+    html{scroll-behavior:smooth}
+    body{margin:0;font-family:ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:var(--cream);color:var(--ink)}
+    button,input,select,textarea{font:inherit}
+    .wrap{max-width:820px;margin:0 auto;padding:14px 14px calc(30px + env(safe-area-inset-bottom))}
+    .masthead{text-align:center;padding:18px 8px 12px}
+    .brand{font-family:Georgia,"Times New Roman",serif;color:var(--navy);font-weight:700;letter-spacing:-.04em;font-size:clamp(36px,11vw,64px);line-height:.9;text-shadow:0 1px 0 #fff}
+    .tagline{margin-top:8px;color:var(--muted);font-size:14px;letter-spacing:.08em;text-transform:uppercase}
+    .panel{background:var(--paper);border:1px solid var(--line);border-radius:20px;box-shadow:var(--shadow);padding:17px;margin:12px 0}
+    .payment-panel{position:relative}
+    .flow-screen{display:none;animation:fadeIn .18s ease}
+    .flow-screen.active{display:block}
+    @keyframes fadeIn{from{opacity:.35;transform:translateY(4px)}to{opacity:1;transform:none}}
+    .choice-panel{text-align:center;padding:26px 18px}
+    .choice-panel h1{font-size:28px;margin:7px 0 7px}
+    .choice-panel p{color:var(--muted);margin:0 0 18px;line-height:1.45}
+    .choice-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+    .choice-grid.three{grid-template-columns:repeat(3,1fr)}
+    .big-choice{border:2px solid var(--line);background:#fff;border-radius:18px;padding:22px 10px;font-size:19px;font-weight:900;cursor:pointer;color:var(--ink);min-height:78px}
+    .big-choice:hover,.big-choice:focus{border-color:var(--navy);outline:none}
+    .big-choice.hot-choice{color:var(--red)}
+    .big-choice.cold-choice{color:var(--navy)}
+    .flow-tools{display:flex;justify-content:space-between;gap:8px;align-items:center;margin:10px 0 4px;flex-wrap:wrap}
+    .flow-summary{font-size:13px;color:var(--muted)}
+    .flow-summary strong{color:var(--ink)}
+    .mini-btn{border:1px solid var(--line);background:#fff;border-radius:10px;padding:8px 10px;font-size:12px;font-weight:800;cursor:pointer;color:var(--navy)}
+    .menu-heading{display:flex;justify-content:space-between;align-items:flex-end;gap:10px;margin:18px 2px 7px}
+    .menu-heading h1{margin:0;font-size:28px}
+    .menu-heading p{margin:3px 0 0;color:var(--muted);font-size:13px}
+    .eyebrow{font-size:11px;letter-spacing:.15em;text-transform:uppercase;font-weight:900;color:var(--navy)}
+    .pay-title{margin:5px 0 12px;font-size:22px}
+    .payment{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+    .paybtn{border:2px solid var(--line);background:#fff;border-radius:15px;padding:16px 10px;font-size:18px;font-weight:850;cursor:pointer;color:var(--ink)}
+    .paybtn.active{border-color:var(--navy);background:var(--navy);color:white}
+    .paybtn[data-pay="card"].active{background:#283446;border-color:#283446}
+    .notice{margin:10px 0 0;text-align:center;font-size:13px;color:var(--muted)}
+    .notice strong{color:var(--ink)}
+    .special{border-color:#e5c78f;background:linear-gradient(135deg,#fff7e5,#fffefa)}
+    .special .special-row{display:flex;justify-content:space-between;gap:14px;align-items:flex-start}
+    .special h2{margin:4px 0 4px;font-size:25px}
+    .special p{margin:0;color:var(--muted)}
+    .special-price{font-weight:900;font-size:24px;color:var(--green);white-space:nowrap}
+    .category-title{font-size:22px;margin:0 0 4px;color:var(--navy)}
+    .category.hot .category-title{color:var(--red)}
+    .category.snacks .category-title{color:var(--green)}
+    .category-sub{font-size:13px;color:var(--muted);margin-bottom:6px}
+    .item{padding:13px 0;border-bottom:1px solid var(--line)}
+    .item:last-child{border-bottom:0}
+    .item.sold{opacity:.52}
+    .item.clickable{cursor:pointer;border-radius:14px;padding:11px 10px;margin:2px -10px;transition:background .15s ease,transform .15s ease}
+    .item.clickable:hover,.item.clickable:focus-within{background:#f7f4ed}
+    .item.clickable:active{transform:scale(.995)}
+    .item-head{display:flex;justify-content:space-between;gap:10px;align-items:flex-start}
+    .item-media{display:flex;gap:11px;align-items:flex-start;min-width:0}
+    .drink-thumb{width:48px;height:58px;object-fit:cover;border-radius:10px;border:1px solid var(--line);box-shadow:0 3px 10px rgba(25,35,45,.08);flex:0 0 auto}
+    .photo-hint{font-size:11px;color:var(--navy);font-weight:800;margin-top:5px}
+    .item-name{font-size:17px;font-weight:800;line-height:1.15}
+    .item.sold .item-name::after{content:"  Sold out";font-size:11px;color:#a13f3f;font-weight:800}
+    .item-desc{font-size:12.5px;color:var(--muted);margin-top:3px;line-height:1.35}
+    .prices{display:flex;gap:7px;flex-wrap:wrap;margin-top:8px}
+    .price-pill{background:#f7f7f4;border:1px solid var(--line);border-radius:10px;padding:6px 8px;font-size:13px}
+    .price-pill b{color:var(--navy)}
+    .simple-price{font-size:16px;font-weight:900;color:var(--navy);white-space:nowrap}
+    .notes-panel{font-size:13px;line-height:1.45;color:var(--muted)}
+    .notes-panel ul{margin:8px 0 0;padding-left:18px}
+    .live-status{display:none;margin:8px 0 0;text-align:center;font-size:12px;color:var(--muted)}
+    .live-status.show{display:block}
+    .manager-entry{text-align:center;padding:18px 0 5px}
+    .manager-link{border:0;background:transparent;color:#7a8088;font-size:12px;text-decoration:underline;cursor:pointer;padding:8px}
+    .thanks{text-align:center;color:var(--navy);font-family:Georgia,"Times New Roman",serif;font-style:italic;font-size:24px;padding:8px 0 14px}
+    .admin{display:none}.admin.show{display:block}.customer.hide{display:none}
+    .login{max-width:430px;margin:50px auto}
+    .field{display:flex;flex-direction:column;gap:5px;margin:9px 0}.field label{font-size:12px;color:var(--muted);font-weight:800}.field input,.field textarea,.field select{width:100%;padding:11px;border:1px solid #d7dce1;border-radius:10px;background:#fff;color:var(--ink)}
+    .field textarea{min-height:70px;resize:vertical}
+    .grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+    .admin h2{margin:5px 0 12px}.admin-item{border:1px solid var(--line);border-radius:14px;padding:12px;margin:10px 0;background:#fff}
+    .admin-row{display:grid;grid-template-columns:1.4fr 1fr auto;gap:8px;align-items:end}
+    .btn{border:0;border-radius:11px;padding:11px 13px;font-weight:850;cursor:pointer;margin:3px 4px 3px 0}.primary{background:var(--navy);color:white}.secondary{background:#edf0f4;color:var(--ink)}.danger{background:#f8e1df;color:#8a3632}
+    .status{font-size:13px;color:var(--green);min-height:18px;margin-top:7px}
+    .proto{background:#fff8f6;border-color:#efcbc6;font-size:13px;color:#6f5551;line-height:1.45}
+    .detail-overlay{position:fixed;inset:0;background:rgba(12,25,43,.58);display:none;align-items:flex-end;justify-content:center;padding:18px;z-index:50}
+    .detail-overlay.show{display:flex}
+    .detail-card{width:min(520px,100%);max-height:88vh;overflow:auto;background:var(--paper);border-radius:24px 24px 18px 18px;box-shadow:0 24px 70px rgba(0,0,0,.25);position:relative}
+    .detail-photo{width:100%;height:260px;object-fit:cover;display:block;border-radius:24px 24px 0 0;background:#eee}
+    .detail-body{padding:18px}
+    .detail-close{position:absolute;top:12px;right:12px;width:40px;height:40px;border:0;border-radius:50%;background:rgba(255,255,255,.92);font-size:25px;line-height:1;cursor:pointer;box-shadow:0 4px 14px rgba(0,0,0,.12)}
+    .detail-title{font-family:Georgia,"Times New Roman",serif;color:var(--navy);font-size:28px;margin:0 0 5px}
+    .detail-copy{color:var(--muted);line-height:1.45;margin:0 0 14px}
+    .detail-prices{display:grid;gap:8px;margin:10px 0 14px}
+    .detail-price-row{display:flex;justify-content:space-between;gap:14px;padding:10px 12px;background:#f7f7f4;border:1px solid var(--line);border-radius:12px}
+    .detail-price-row b{color:var(--navy)}
+    .detail-note{font-size:12px;color:var(--muted);border-top:1px solid var(--line);padding-top:12px;margin-top:12px}
+    .theme-banner{display:none;text-align:center;margin:0 0 8px;padding:8px 12px;border-radius:12px;font-weight:900;font-size:13px;letter-spacing:.03em}
+    body.theme-halloween{--cream:#211a24;--paper:#fff8ed;--navy:#4b2c68;--red:#d86624;--green:#415c2c;--line:#e1cdb8}
+    body.theme-halloween .theme-banner{display:block;background:#f0a33b;color:#2b1634}
+    body.theme-christmas{--cream:#eef4ef;--paper:#fffdf9;--navy:#174b3a;--red:#b7292f;--green:#174b3a;--line:#d7e4d9}
+    body.theme-christmas .theme-banner{display:block;background:#b7292f;color:white}
+    body.theme-valentines{--cream:#fff0f3;--paper:#fffafb;--navy:#8c234a;--red:#c72c61;--green:#6a3c55;--line:#f0ccd6}
+    body.theme-valentines .theme-banner{display:block;background:#f6ccd8;color:#7d1d42}
+    body.theme-stpatricks{--cream:#edf7ee;--paper:#fffefa;--navy:#17613a;--red:#8c5f22;--green:#17613a;--line:#cfe3d4}
+    body.theme-stpatricks .theme-banner{display:block;background:#237a46;color:white}
+    body.theme-veterans,body.theme-memorial,body.theme-presidents,body.theme-labor{--cream:#eef3f9;--paper:#fff;--navy:#173c78;--red:#b62f36;--green:#315b47;--line:#d4dce7}
+    body.theme-veterans .theme-banner,body.theme-memorial .theme-banner,body.theme-presidents .theme-banner,body.theme-labor .theme-banner{display:block;background:linear-gradient(90deg,#173c78 0 44%,#fff 44% 56%,#b62f36 56%);color:#fff;text-shadow:0 1px 2px #222}
+    body.theme-easter{--cream:#f7f1fb;--paper:#fffefa;--navy:#6d4a91;--red:#c26384;--green:#568a68;--line:#e2d6e9}
+    body.theme-easter .theme-banner{display:block;background:#e7d5f3;color:#51356f}
+    body.theme-arbor{--cream:#eff5ec;--paper:#fffefa;--navy:#365f43;--red:#9b633c;--green:#365f43;--line:#d6e2d1}
+    body.theme-arbor .theme-banner{display:block;background:#d7e8ce;color:#315139}
+    body.theme-birthday{--cream:#fff7e8;--paper:#fffefa;--navy:#4d55a8;--red:#d54f72;--green:#3d8a74;--line:#ead8bc}
+    body.theme-birthday .theme-banner{display:block;background:linear-gradient(90deg,#ffd45d,#ff9db3,#9cdcf0);color:#3e3650}
+    body.theme-coffee{--cream:#f3ece5;--paper:#fffdf9;--navy:#4b3528;--red:#9b4b38;--green:#536b4e;--line:#dfd2c6}
+    body.theme-coffee .theme-banner{display:block;background:#6b4936;color:#fff}
+    body.theme-thanksgiving{--cream:#f7eee2;--paper:#fffdfa;--navy:#6a3e2a;--red:#a75232;--green:#586947;--line:#e3d2bf}
+    body.theme-thanksgiving .theme-banner{display:block;background:#a65a35;color:#fff}
+    .special-photo{width:94px;height:94px;border-radius:14px;object-fit:cover;border:1px solid var(--line);box-shadow:0 4px 12px rgba(0,0,0,.08);flex:0 0 auto}
+    .special-main{display:flex;gap:14px;align-items:flex-start}
+    .role-badge{display:inline-block;padding:5px 9px;border-radius:999px;background:#edf0f4;color:var(--navy);font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:.08em}
+    .image-preview{max-width:160px;max-height:130px;border-radius:12px;border:1px solid var(--line);object-fit:cover;margin-top:8px;display:none}
+    .image-preview.show{display:block}
+
+    .admin-shell{display:grid;gap:12px}
+    .admin-section{background:var(--paper);border:1px solid var(--line);border-radius:18px;box-shadow:var(--shadow);overflow:hidden}
+    .admin-section>summary{list-style:none;cursor:pointer;padding:16px 17px;font-weight:900;font-size:18px;color:var(--ink);display:flex;align-items:center;justify-content:space-between;gap:12px}
+    .admin-section>summary::-webkit-details-marker{display:none}
+    .admin-section>summary::after{content:'+';font-size:24px;color:var(--navy);line-height:1}
+    .admin-section[open]>summary::after{content:'−'}
+    .admin-section-body{padding:0 17px 17px}
+    .admin-section .section-note{font-size:12.5px;line-height:1.45;color:var(--muted);margin:0 0 12px}
+    .admin-toolbar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:12px}
+    .admin-toolbar input{flex:1;min-width:170px;padding:11px 12px;border:1px solid #d7dce1;border-radius:11px;background:#fff}
+    .admin-category{border-top:1px solid var(--line);padding-top:10px;margin-top:10px}
+    .admin-category:first-child{border-top:0;margin-top:0;padding-top:0}
+    .admin-category-head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin:6px 0}
+    .admin-category-head h3{margin:0;font-size:18px;color:var(--navy)}
+    .admin-compact-item{border:1px solid var(--line);border-radius:13px;background:#fff;margin:7px 0;overflow:hidden}
+    .admin-compact-item summary{list-style:none;cursor:pointer;padding:11px 12px;display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;align-items:center}
+    .admin-compact-item summary::-webkit-details-marker{display:none}
+    .admin-compact-name{font-weight:850;min-width:0}
+    .admin-compact-price{font-size:12px;color:var(--muted);text-align:right}
+    .admin-compact-edit{padding:0 12px 12px}
+    .sold-badge{display:inline-block;margin-left:6px;padding:2px 6px;border-radius:999px;background:#f8e1df;color:#8a3632;font-size:10px;font-weight:900;vertical-align:middle}
+    .holiday-grid{display:grid;gap:8px}
+    .holiday-row{display:grid;grid-template-columns:minmax(120px,1.6fr) .8fr .8fr;gap:8px;align-items:end;padding:10px;border:1px solid var(--line);border-radius:12px;background:#fff}
+    .holiday-row .field{margin:0}
+    .holiday-name{font-weight:850;font-size:13px;padding-bottom:11px}
+    .pin-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+    .pin-card{border:1px solid var(--line);border-radius:13px;padding:12px;background:#fff}
+    .pin-card h3{margin:0 0 8px;font-size:16px}
+    .sticky-save{position:sticky;bottom:8px;z-index:20;background:rgba(255,254,250,.94);backdrop-filter:blur(8px);border:1px solid var(--line);border-radius:16px;box-shadow:0 8px 26px rgba(27,43,61,.13);padding:10px;margin:12px 0;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+    .sticky-save .status{flex:1;min-width:150px;margin:0}
+    .compact-photo-row{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+    .compact-photo-row .image-preview{margin:0;width:70px;height:70px}
+    .setting-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+    @media(max-width:620px){.pin-grid,.setting-row{grid-template-columns:1fr}.holiday-row{grid-template-columns:1fr 1fr}.holiday-name{grid-column:1/-1;padding-bottom:0}.admin-section>summary{font-size:17px;padding:14px}.admin-section-body{padding:0 14px 14px}.admin-compact-item summary{grid-template-columns:1fr}.admin-compact-price{text-align:left}.sticky-save{bottom:6px}}
+    @media(max-width:620px){.grid,.admin-row{grid-template-columns:1fr}.brand{font-size:12vw}.special .special-row{display:block}.special-price{margin-top:8px;display:block}.panel{border-radius:17px;padding:15px}.choice-grid.three{grid-template-columns:1fr}.big-choice{min-height:68px}.menu-heading{align-items:flex-start;flex-direction:column}}
+  </style>
+</head>
+<body>
+<div class="wrap">
+  <header class="masthead">
+    <div class="brand">FELLER'S ESPRESSO WAGON</div>
+    <div class="tagline">Drive-up coffee menu</div>
+    <div class="live-status" id="liveStatus">Loading live menu…</div>
+  </header>
+  <div class="theme-banner" id="themeBanner"></div>
+
+  <main class="customer" id="customerView">
+    <section class="flow-screen active" id="paymentStep">
+      <div class="panel choice-panel payment-panel">
+        <div class="eyebrow">Step 1 of 3</div>
+        <h1>How are you paying?</h1>
+        <p>Pick one and we’ll show the correct prices throughout the menu.</p>
+        <div class="choice-grid">
+          <button class="big-choice pay-choice" data-pay="cash">Cash</button>
+          <button class="big-choice pay-choice" data-pay="card">Credit / Debit</button>
+        </div>
+      </div>
+    </section>
+
+    <section class="flow-screen" id="categoryStep">
+      <div class="flow-tools">
+        <button class="mini-btn" id="backToPayment">← Change payment</button>
+        <div class="flow-summary" id="categorySummary"></div>
+      </div>
+      <section class="panel special" id="specialCardChoice" hidden></section>
+      <section class="panel notes-panel">
+        <div class="eyebrow">Menu notes</div>
+        <ul id="menuNotesChoice"></ul>
+      </section>
+      <div class="panel choice-panel">
+        <div class="eyebrow">Step 2 of 3</div>
+        <h1>What sounds good?</h1>
+        <p>Choose a section and we’ll narrow the menu down for you.</p>
+        <div class="choice-grid three">
+          <button class="big-choice hot-choice category-choice" data-filter="hot">Hot</button>
+          <button class="big-choice cold-choice category-choice" data-filter="cold">Cold</button>
+          <button class="big-choice category-choice" data-filter="both">Both</button>
+        </div>
+      </div>
+    </section>
+
+    <section class="flow-screen" id="menuStep">
+      <div class="flow-tools">
+        <button class="mini-btn" id="backToCategory">← Hot / Cold / Both</button>
+        <button class="mini-btn" id="changePayment">Change payment</button>
+      </div>
+      <div class="menu-heading">
+        <div><div class="eyebrow">Step 3 of 3</div><h1 id="menuHeadingTitle">Menu</h1><p id="menuHeadingSub"></p></div>
+        <div class="flow-summary" id="menuSummary"></div>
+      </div>
+      <section class="panel special" id="specialCardMenu" hidden></section>
+      <div id="menu"></div>
+      <section class="panel notes-panel">
+        <div class="eyebrow">Menu notes</div>
+        <ul id="menuNotes"></ul>
+      </section>
+      <div class="thanks">Thank You • Come Again!</div>
+    </section>
+    <div class="manager-entry"><button class="manager-link" id="adminToggle">Staff access</button></div>
+  </main>
+
+  <div class="detail-overlay" id="drinkDetail" aria-hidden="true">
+    <article class="detail-card" role="dialog" aria-modal="true" aria-labelledby="detailTitle">
+      <button class="detail-close" id="detailClose" aria-label="Close drink details">×</button>
+      <img class="detail-photo" id="detailPhoto" alt="" />
+      <div class="detail-body">
+        <div class="eyebrow">Featured drink</div>
+        <h2 class="detail-title" id="detailTitle"></h2>
+        <p class="detail-copy" id="detailCopy"></p>
+        <div class="detail-prices" id="detailPrices"></div>
+        <div class="detail-note" id="detailNote"></div>
+      </div>
+    </article>
+  </div>
+
+  <section class="admin" id="loginView">
+    <div class="panel login">
+      <div class="eyebrow">Staff access</div>
+      <h2>Enter your PIN</h2>
+      <p class="notes-panel">Manager and employee PINs open different controls automatically. PINs are checked securely through Supabase Auth.</p>
+      <div class="field"><input id="pinInput" type="password" inputmode="numeric" placeholder="6-digit PIN" /></div>
+      <button class="btn primary" id="loginBtn">Continue</button>
+      <button class="btn secondary" id="cancelLogin">Cancel</button>
+      <div class="status" id="loginStatus"></div>
+    </div>
+  </section>
+
+  <section class="admin" id="employeeView">
+    <div class="panel">
+      <span class="role-badge">Employee</span>
+      <h2>Today’s Special</h2>
+      <p class="notes-panel">This PIN can only update the daily special. The regular menu and settings are locked.</p>
+      <div class="grid">
+        <div class="field"><label>Show daily special?</label><select id="empSpecialAvailable"><option value="true">Yes</option><option value="false">No</option></select></div>
+        <div class="field"><label>Special cash price</label><input id="empSpecialPrice" type="number" step="0.01" min="0" /></div>
+      </div>
+      <div class="field"><label>Daily special name</label><input id="empSpecialName" /></div>
+      <div class="field"><label>Special description</label><textarea id="empSpecialDesc"></textarea></div>
+      <div class="field"><label>Special photo</label><input id="empSpecialPhoto" type="file" accept="image/*" capture="environment" /><img id="empSpecialPreview" class="image-preview" alt="Special preview"></div>
+      <button class="btn secondary" id="empRemovePhoto">Remove special photo</button>
+      <div><button class="btn primary" id="saveEmployee">Save special</button><button class="btn secondary" id="exitEmployee">Back to customer menu</button></div>
+      <div class="status" id="employeeStatus"></div>
+    </div>
+  </section>
+
+  <section class="admin" id="adminView">
+    <div class="admin-shell">
+      <details class="admin-section" open>
+        <summary>⭐ Daily Special</summary>
+        <div class="admin-section-body">
+          <span class="role-badge">Manager</span>
+          <p class="section-note">The everyday task. Turn the special on or off, change its cash price, description, and photo.</p>
+          <div class="setting-row">
+            <div class="field"><label>Show daily special?</label><select id="specialAvailable"><option value="true">Yes</option><option value="false">No</option></select></div>
+            <div class="field"><label>Special cash price</label><input id="specialPrice" type="number" step="0.01" min="0" /></div>
+          </div>
+          <div class="field"><label>Daily special name</label><input id="specialName" /></div>
+          <div class="field"><label>Special description</label><textarea id="specialDesc"></textarea></div>
+          <div class="compact-photo-row">
+            <img id="specialPreview" class="image-preview" alt="Special preview">
+            <div class="field" style="flex:1;min-width:210px"><label>Special photo</label><input id="specialPhoto" type="file" accept="image/*" capture="environment" /></div>
+            <button class="btn secondary" id="removeSpecialPhoto">Remove photo</button>
+          </div>
+        </div>
+      </details>
+
+      <details class="admin-section">
+        <summary>☕ Menu & Prices</summary>
+        <div class="admin-section-body">
+          <p class="section-note">Search for a drink, then tap its row to edit. Use “Sold out” for temporary changes and Delete only when an item is permanently gone.</p>
+          <div class="admin-toolbar"><input id="menuSearch" type="search" placeholder="Search menu, e.g. mocha or muffin"><button class="btn secondary" id="clearMenuSearch">Clear</button></div>
+          <div id="adminMenu"></div>
+        </div>
+      </details>
+
+      <details class="admin-section">
+        <summary>🎨 Holidays & Themes</summary>
+        <div class="admin-section-body">
+          <div class="setting-row">
+            <div class="field"><label>Theme mode</label><select id="themeMode"><option value="auto">Automatic by date</option><option value="manual">Choose manually</option><option value="off">Always use everyday blue</option></select></div>
+            <div class="field"><label>Manual theme</label><select id="manualTheme"><option value="default">Everyday blue</option><option value="halloween">Halloween</option><option value="veterans">Veterans Day</option><option value="memorial">Memorial Day</option><option value="christmas">Christmas</option><option value="thanksgiving">Thanksgiving</option><option value="easter">Easter</option><option value="valentines">Valentine’s Day</option><option value="stpatricks">St. Patrick’s Day</option><option value="labor">Labor Day</option><option value="arbor">Arbor Day</option><option value="presidents">Presidents Day</option><option value="birthday">Barista Birthday</option><option value="coffee">Coffee Holiday</option></select></div>
+          </div>
+          <div class="setting-row">
+            <div class="field"><label>Barista birthday (MM-DD)</label><input id="birthdayDate" placeholder="06-15" /></div>
+            <div class="field"><label>Birthday message</label><input id="birthdayName" placeholder="Celebrate Jamie today!" /></div>
+          </div>
+          <p class="section-note">For each holiday, “Days before” and “Days after” control how long its theme runs. Example: Christmas 14 before + 7 after gives roughly three weeks.</p>
+          <div class="holiday-grid" id="holidayControls"></div>
+        </div>
+      </details>
+
+      <details class="admin-section">
+        <summary>⚙️ Pricing & Site Settings</summary>
+        <div class="admin-section-body">
+          <div class="setting-row"><div class="field"><label>Card fee (%)</label><input id="adminFee" type="number" step="0.1" min="0" /></div><div class="field"><label>Locally roasted headline</label><input id="coffeeHeadline" /></div></div>
+          <div class="field"><label>Locally roasted message</label><textarea id="coffeeMessage"></textarea></div>
+          <input id="adminPin" type="hidden"><input id="employeePin" type="hidden">
+        </div>
+      </details>
+
+      <details class="admin-section">
+        <summary>🔐 Staff Access & PINs</summary>
+        <div class="admin-section-body">
+          <p class="section-note">Current PINs are never displayed. Enter a new 6-digit PIN twice to replace one. Only a Manager can use these controls.</p>
+          <div class="pin-grid">
+            <div class="pin-card"><h3>Manager PIN</h3><div class="field"><label>New PIN</label><input id="managerNewPin" type="password" inputmode="numeric" maxlength="6" /></div><div class="field"><label>Confirm PIN</label><input id="managerConfirmPin" type="password" inputmode="numeric" maxlength="6" /></div><button class="btn secondary" id="changeManagerPin">Change Manager PIN</button></div>
+            <div class="pin-card"><h3>Employee PIN</h3><div class="field"><label>New PIN</label><input id="employeeNewPin" type="password" inputmode="numeric" maxlength="6" /></div><div class="field"><label>Confirm PIN</label><input id="employeeConfirmPin" type="password" inputmode="numeric" maxlength="6" /></div><button class="btn secondary" id="changeEmployeePin">Change Employee PIN</button></div>
+          </div>
+          <div class="status" id="pinChangeStatus"></div>
+        </div>
+      </details>
+    </div>
+    <div class="sticky-save"><button class="btn primary" id="saveBtn">Save manager changes</button><button class="btn secondary" id="exitAdmin">Back to customer menu</button><div class="status" id="saveStatus"></div></div>
+  </section>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+const defaultData = {
+  version: 2,
+  feePercent: 4,
+  managerPin: '2468',
+  employeePin: '1357',
+  theme: {mode:'auto', manual:'default', birthdayDate:'', birthdayName:'Our barista'},
+  special: {available:false, name:'', description:'', price:0, photo:''},
+  notes: [
+    'Only lattes come with free flavoring.',
+    'All-natural syrups: +$0.50 in a latte, +$1.00 in all other drinks.',
+    'Each additional espresso shot: +$0.75.',
+    'Soy, almond, oat milk, or half & half: +$1.00.',
+    'Whip on a lid: +$0.75.',
+    'Whip in a 12 oz cup / pup cone: $1.50.',
+    'Add 1 scoop protein powder to any Freeze: +$1.00.'
+  ],
+  categories: [
+    {name:'Hot Drinks', className:'hot', subtitle:'Tall 12 oz • 1–2 shots   |   Grande 16 oz • 2–3 shots   |   Mondo 20 oz • 4 shots', items:[
+      {name:'Latte', description:'With or without flavor', available:true, sizes:[['Tall · 12 oz',4.50],['Grande · 16 oz',5.00],['Mondo · 20 oz',6.00]]},
+      {name:'Mocha', available:true, sizes:[['Tall · 12 oz',4.75],['Grande · 16 oz',5.25],['Mondo · 20 oz',6.25]]},
+      {name:'Mexican Mocha', available:true, sizes:[['Tall · 12 oz',5.00],['Grande · 16 oz',5.50],['Mondo · 20 oz',6.50]]},
+      {name:'Low Carb Mocha', available:true, sizes:[['Tall · 12 oz',5.00],['Grande · 16 oz',5.50],['Mondo · 20 oz',6.50]]},
+      {name:'Cappuccino', available:true, sizes:[['Tall · 12 oz',3.75],['Grande · 16 oz',4.25],['Mondo · 20 oz',4.75]]},
+      {name:'Breve', available:true, sizes:[['Tall · 12 oz',4.75],['Grande · 16 oz',5.25],['Mondo · 20 oz',6.25]]},
+      {name:'Mocha Breve', available:true, sizes:[['Tall · 12 oz',5.00],['Grande · 16 oz',5.50],['Mondo · 20 oz',6.50]]},
+      {name:'Americano', available:true, sizes:[['Tall · 12 oz',3.50],['Grande · 16 oz',4.00],['Mondo · 20 oz',4.50]]},
+      {name:'House Coffee', available:true, sizes:[['Tall · 12 oz',2.75],['Grande · 16 oz',3.00],['Mondo · 20 oz',3.25]]},
+      {name:'Sludge Cup', available:true, sizes:[['Tall · 12 oz',3.25],['Grande · 16 oz',4.25],['Mondo · 20 oz',4.75]]},
+      {name:'Plain Tea', available:true, sizes:[['Tall · 12 oz',2.75],['Grande · 16 oz',3.00],['Mondo · 20 oz',3.25]]},
+      {name:'London Fog', available:true, sizes:[['Tall · 12 oz',3.50],['Grande · 16 oz',3.75],['Mondo · 20 oz',4.25]]},
+      {name:'Chai Tea', description:'Vanilla, Spiced, Chocolate, Oregon, Pumpkin (seasonal)', available:true, sizes:[['Tall · 12 oz',4.50],['Grande · 16 oz',5.00],['Mondo · 20 oz',5.50]]},
+      {name:'Dirty Chai', available:true, sizes:[['Tall · 12 oz',5.50],['Grande · 16 oz',6.00],['Mondo · 20 oz',6.50]]},
+      {name:'Steamer', available:true, sizes:[['Tall · 12 oz',3.50],['Grande · 16 oz',4.00],['Mondo · 20 oz',4.75]]},
+      {name:'Hot Chocolate', available:true, sizes:[['Tall · 12 oz',3.50],['Grande · 16 oz',4.00],['Mondo · 20 oz',4.75]]},
+      {name:'Egg Nog Latte', description:'Seasonal', available:true, sizes:[['Tall · 12 oz',5.00],['Grande · 16 oz',5.50],['Mondo · 20 oz',6.50]]},
+      {name:'Doppio', available:true, sizes:[['Price',2.50]]},
+      {name:'Flavor / Extra Flavor / Sauce', available:true, sizes:[['Add-on',0.75]]}
+    ]},
+    {name:'Cold Drinks · Blended', className:'cold', subtitle:'16 oz • 2 shots   |   24 oz • 4 shots', items:[
+      {name:'Bean Freeze', description:'Latte or Mocha', available:true, sizes:[['16 oz',5.25],['24 oz',6.25]]},
+      {name:'Oreo or Nutter Butter Freeze', available:true, sizes:[['16 oz',5.25],['24 oz',6.25]]},
+      {name:'Oreo / Nutter Butter Freeze with Espresso Shots', available:true, sizes:[['16 oz',6.25],['24 oz',7.25]]},
+      {name:'Chai Freeze', description:'Vanilla, Spiced, Chocolate, Oregon, Pumpkin (seasonal)', available:true, sizes:[['16 oz',5.25],['24 oz',6.25]]},
+      {name:'Dirty Chai Freeze', available:true, sizes:[['16 oz',6.25],['24 oz',7.25]]},
+      {name:'Fruit Freeze', available:true, sizes:[['16 oz',4.50],['24 oz',5.50]]},
+      {name:'RedBull Freeze', available:true, sizes:[['16 oz',5.25],['24 oz',6.25]]},
+      {name:'Lotus Freeze', description:'Blue, Red, Pink, Purple', available:true, sizes:[['16 oz',5.25],['24 oz',6.25]]},
+      {name:'Jet Tea Smoothie', description:'Real fruit puree • Strawberry, Mango, Peach, Strawberry Banana', available:true, sizes:[['16 oz',5.25],['24 oz',6.25]]},
+      {name:'Low Carb Mocha', available:true, sizes:[['16 oz',5.50],['24 oz',6.50]]},
+      {name:'Mexican Mocha', available:true, sizes:[['16 oz',5.50],['24 oz',6.50]]}
+    ]},
+    {name:'Cold Drinks · Over Ice', className:'cold', subtitle:'16 oz   |   24 oz', items:[
+      {name:'Latte', description:'With or without flavor', available:true, sizes:[['16 oz',4.50],['24 oz',5.50]]},
+      {name:'Mocha', available:true, sizes:[['16 oz',4.75],['24 oz',5.75]]},
+      {name:'Breve', available:true, sizes:[['16 oz',5.00],['24 oz',6.00]]},
+      {name:'Mocha Breve', available:true, sizes:[['16 oz',5.50],['24 oz',6.50]]},
+      {name:'Chai', description:'Vanilla, Spiced, Chocolate, Oregon, Pumpkin (seasonal)', available:true, sizes:[['16 oz',4.75],['24 oz',5.75]]},
+      {name:'Dirty Chai', available:true, sizes:[['16 oz',5.75],['24 oz',6.75]]},
+      {name:'Mexican Mocha', available:true, sizes:[['16 oz',5.50],['24 oz',6.50]]},
+      {name:'Italian Soda', available:true, sizes:[['16 oz',4.25],['24 oz',5.25]]},
+      {name:'RedBull Italian Soda', available:true, sizes:[['16 oz',4.75],['24 oz',5.75]]},
+      {name:'Lotus', description:'Blue, Red, Pink, Lemonade', available:true, sizes:[['16 oz',4.75],['24 oz',5.75]]},
+      {name:'Americano', available:true, sizes:[['16 oz',3.25],['24 oz',4.25]]},
+      {name:'Plain Tea', available:true, sizes:[['16 oz',2.75],['24 oz',3.25]]},
+      {name:'Sludge Cup / Cold Brew', available:true, sizes:[['16 oz',4.25],['24 oz',4.75]]},
+      {name:'London Fog', available:true, sizes:[['16 oz',4.00],['24 oz',4.50]]}
+    ]},
+    {name:'Snacks & Other', className:'snacks', subtitle:'', items:[
+      {name:'Muffin', description:'Double Choc, Blueberry, Almond Poppyseed, seasonal flavors', available:true, sizes:[['Price',3.00]]},
+      {name:'Biscotti', available:true, sizes:[['Price',2.00]]},
+      {name:'Bagel', description:'Plain & Cinnamon Raisin', available:true, sizes:[['Price',2.00]]},
+      {name:'Bagel with Cream Cheese', available:true, sizes:[['Price',3.00]]},
+      {name:'Extra Cream Cheese', available:true, sizes:[['Price',1.00]]},
+      {name:'Pepsi Can', available:true, sizes:[['Price',1.50]]},
+      {name:'Water Bottle', available:true, sizes:[['Price',1.50]]},
+      {name:'Juice Box', available:true, sizes:[['Price',1.50]]},
+      {name:'Water Cup', available:true, sizes:[['Price',0.75]]},
+      {name:'Extra Cup', available:true, sizes:[['Price',0.75]]},
+      {name:'RedBull Can', available:true, sizes:[['Price',3.00]]},
+      {name:'Ice Bag', available:true, sizes:[['Price',3.00]]},
+      {name:'1 lb Whole Espresso Beans', available:true, sizes:[['Price',17.00]]},
+      {name:'1 lb Ground Espresso Beans', available:true, sizes:[['Price',18.00]]}
+    ]}
+  ]
+};
+
+const SUPABASE_URL='https://tosppucljxrljwgvpexu.supabase.co';
+const SUPABASE_PUBLISHABLE_KEY='sb_publishable_XMczprk3FPzpiPbJJl3Tgg_2GoeozO0';
+const apiHeaders={apikey:SUPABASE_PUBLISHABLE_KEY};
+const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
+let currentRole=null;
+let liveSettings={};
+
+function rowSizes(r){
+  if(r.price_tall!=null || r.price_grande!=null || r.price_mondo!=null){
+    return [['Tall · 12 oz',r.price_tall],['Grande · 16 oz',r.price_grande],['Mondo · 20 oz',r.price_mondo]].filter(x=>x[1]!=null).map(x=>[x[0],Number(x[1])]);
+  }
+  if(r.price_16oz!=null || r.price_24oz!=null){
+    return [['16 oz',r.price_16oz],['24 oz',r.price_24oz]].filter(x=>x[1]!=null).map(x=>[x[0],Number(x[1])]);
+  }
+  if(r.single_price!=null) return [['Price',Number(r.single_price)]];
+  return [];
+}
+function dbCategories(rows){
+  const defs=[
+    ['hot','Hot Drinks','hot','Tall 12 oz • 1–2 shots   |   Grande 16 oz • 2–3 shots   |   Mondo 20 oz • 4 shots'],
+    ['blended','Cold Drinks · Blended','cold','16 oz • 2 shots   |   24 oz • 4 shots'],
+    ['over-ice','Cold Drinks · Over Ice','cold','16 oz   |   24 oz'],
+    ['addon','Add-Ons','snacks',''],
+    ['snacks','Snacks & Other','snacks','']
+  ];
+  return defs.map(([key,name,className,subtitle])=>({name,className,subtitle,items:rows.filter(r=>r.category===key).sort((a,b)=>(a.sort_order||0)-(b.sort_order||0)).map(r=>({id:r.id,categoryKey:r.category,name:r.name,description:r.description||'',available:r.available!==false,image_url:r.image_url||'',sizes:rowSizes(r)}))})).filter(c=>c.items.length);
+}
+async function apiGet(path){
+  const r=await fetch(`${SUPABASE_URL}/rest/v1/${path}`,{headers:apiHeaders,cache:'no-store'});
+  if(!r.ok) throw new Error(`${r.status} ${await r.text()}`);
+  return r.json();
+}
+async function loadLiveMenu(){
+  const status=document.getElementById('liveStatus'); status.classList.add('show'); status.textContent='Loading live menu…';
+  try{
+    const [items,specials,settings]=await Promise.all([
+      apiGet('menu_items?select=*&order=sort_order.asc'),
+      apiGet('daily_special?select=*&order=id.asc&limit=1'),
+      apiGet('site_settings?select=setting_key,setting_value')
+    ]);
+    if(items.length) data.categories=dbCategories(items);
+    if(specials[0]) data.special={id:specials[0].id,available:!!specials[0].active,name:specials[0].name||'',description:specials[0].description||'',price:Number(specials[0].cash_price||0),photo:specials[0].image_url||''};
+    const smap=Object.fromEntries(settings.map(s=>[s.setting_key,s.setting_value]));
+    liveSettings=smap;
+    if(smap.pricing?.card_fee_percent!=null) data.feePercent=Number(smap.pricing.card_fee_percent);
+    if(smap.pricing?.notice) data.notes=[smap.pricing.notice,...defaultData.notes];
+    if(smap.business?.name) document.querySelector('.brand').textContent=String(smap.business.name).toUpperCase();
+    if(smap.business?.tagline) document.querySelector('.tagline').textContent=smap.business.tagline;
+    if(smap.birthday){data.theme.birthdayDate=smap.birthday.date||'';data.theme.birthdayName=smap.birthday.message||smap.birthday.name||'';}
+    if(smap.theme){const mode=smap.theme.mode==='automatic'?'auto':smap.theme.mode;data.theme.mode=mode||data.theme.mode;data.theme.manual=smap.theme.manual_theme||data.theme.manual;}
+    if(smap.coffee_story?.enabled!==false){const h=smap.coffee_story?.headline||'Roasted Locally. Served Fresh.';const m=smap.coffee_story?.message||'We roast our own espresso beans locally for a fresher cup.';data.notes=[`${h} ${m}`,...data.notes.filter(n=>!String(n).startsWith('Roasted Locally.'))];}
+    status.textContent='Live menu connected';
+    setTimeout(()=>status.classList.remove('show'),1800);
+  }catch(err){
+    console.error('Live menu load failed',err);
+    status.textContent='Using backup menu — live update unavailable';
+  }
+  renderCustomer();
+}
+
+let data = structuredClone(defaultData);
+data.employeePin ??= '1357';
+data.theme ??= structuredClone(defaultData.theme);
+data.special.photo ??= '';
+let payment='cash';
+const money=n=>'$'+Number(n).toFixed(2);
+const cardPrice=n=>Math.round((Number(n)*(1+Number(data.feePercent)/100))*100)/100;
+const displayPrice=n=>payment==='card'?money(cardPrice(n)):money(n);
+const esc=(v='')=>String(v).replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]));
+
+const featuredPhotos = {
+  'Hot Drinks|Mexican Mocha': {src:'mexican-mocha.jpg', copy:'Rich chocolate and espresso with a warm Mexican mocha flavor. A longtime coffee-shop favorite.'},
+  'Hot Drinks|Breve': {src:'breve.jpg', copy:'Espresso with rich half-and-half for a smooth, creamy cup.'},
+  'Cold Drinks · Blended|Dirty Chai Freeze': {src:'dirty-chai-freeze.jpg', copy:'Spiced chai blended with ice and an espresso shot for a smooth, bold frozen drink.'}
+};
+function featuredFor(categoryName,itemName,item){if(item?.image_url) return {src:item.image_url,copy:item.description||''}; return featuredPhotos[`${categoryName}|${itemName}`] || null}
+function openDrinkDetail(category,item,feature){
+  detailPhoto.src=feature.src; detailPhoto.alt=`${item.name} drink photo`;
+  detailTitle.textContent=item.name;
+  detailCopy.textContent=feature.copy || item.description || '';
+  detailPrices.innerHTML=item.sizes.map(sz=>`<div class="detail-price-row"><span>${esc(sz[0])}</span><b>${displayPrice(sz[1])}</b></div>`).join('');
+  const fee=Number(data.feePercent).toFixed(1).replace('.0','');
+  detailNote.textContent=payment==='cash'?'Showing cash menu prices.':`Credit / debit pricing shown with the ${fee}% service fee included.`;
+  drinkDetail.classList.add('show'); drinkDetail.setAttribute('aria-hidden','false'); document.body.style.overflow='hidden';
+}
+function closeDrinkDetail(){drinkDetail.classList.remove('show');drinkDetail.setAttribute('aria-hidden','true');document.body.style.overflow=''}
+
+let menuFilter='both';
+function specialHTML(){
+  const photo=data.special.photo?`<img class="special-photo" src="${data.special.photo}" alt="${esc(data.special.name)}">`:'';
+  return `<div class="eyebrow">Today’s special</div><div class="special-row"><div class="special-main">${photo}<div><h2>${esc(data.special.name)}</h2><p>${esc(data.special.description||'')}</p></div></div><span class="special-price">${displayPrice(data.special.price)}</span></div>`;
+}
+function renderSpecial(id){
+  const el=document.getElementById(id);
+  if(data.special.available && data.special.name){el.hidden=false;el.innerHTML=specialHTML()} else el.hidden=true;
+}
+function renderNotes(id){document.getElementById(id).innerHTML=data.notes.map(n=>`<li>${esc(n)}</li>`).join('')}
+function showFlow(step){
+  ['paymentStep','categoryStep','menuStep'].forEach(id=>document.getElementById(id).classList.toggle('active',id===step));
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+function nthWeekday(year,month,weekday,n){let d=new Date(year,month,1);let add=(7+weekday-d.getDay())%7;return new Date(year,month,1+add+7*(n-1))}
+function lastWeekday(year,month,weekday){let d=new Date(year,month+1,0);let sub=(7+d.getDay()-weekday)%7;return new Date(year,month,d.getDate()-sub)}
+function easterDate(y){const a=y%19,b=Math.floor(y/100),c=y%100,d=Math.floor(b/4),e=b%4,f=Math.floor((b+8)/25),g=Math.floor((b-f+1)/3),h=(19*a+b-d-g+15)%30,i=Math.floor(c/4),k=c%4,l=(32+2*e+2*i-h-k)%7,m=Math.floor((a+11*h+22*l)/451),month=Math.floor((h+l-7*m+114)/31)-1,day=((h+l-7*m+114)%31)+1;return new Date(y,month,day)}
+function sameDay(a,b){return a.getFullYear()===b.getFullYear()&&a.getMonth()===b.getMonth()&&a.getDate()===b.getDate()}
+function daysBetween(a,b){return Math.round((new Date(a.getFullYear(),a.getMonth(),a.getDate())-new Date(b.getFullYear(),b.getMonth(),b.getDate()))/86400000)}
+function thanksgivingDate(y){return nthWeekday(y,10,4,4)}
+function holidayWindow(key,anchor,theme,banner){const cfg=liveSettings[key]||{};if(cfg.enabled===false)return null;const before=Number(cfg.days_before??0),after=Number(cfg.days_after??0),delta=daysBetween(new Date(),anchor);return delta>=-before&&delta<=after?[theme,banner]:null}
+function resolveAutoTheme(now=new Date()){const y=now.getFullYear(),m=now.getMonth()+1,d=now.getDate(),md=String(m).padStart(2,'0')+'-'+String(d).padStart(2,'0');
+  if(data.theme.birthdayDate && md===data.theme.birthdayDate) return ['birthday',data.theme.birthdayName||'Happy Birthday!'];
+  const checks=[
+    ['holiday_valentines',new Date(y,1,14),'valentines','Happy Valentine’s Day!'],
+    ['holiday_presidents_day',nthWeekday(y,1,1,3),'presidents','Presidents Day'],
+    ['holiday_st_patricks',new Date(y,2,17),'stpatricks','Happy St. Patrick’s Day!'],
+    ['holiday_easter',easterDate(y),'easter','Happy Easter!'],
+    ['holiday_arbor_day',lastWeekday(y,3,5),'arbor','Happy Arbor Day!'],
+    ['holiday_memorial_day',lastWeekday(y,4,1),'memorial','Remembering & honoring on Memorial Day'],
+    ['holiday_labor_day',nthWeekday(y,8,1,1),'labor','Happy Labor Day!'],
+    ['holiday_national_coffee_day',new Date(y,8,29),'coffee','Happy National Coffee Day!'],
+    ['holiday_halloween',new Date(y,9,31),'halloween','Happy Halloween!'],
+    ['holiday_veterans_day',new Date(y,10,11),'veterans','Thank you, Veterans'],
+    ['holiday_thanksgiving',thanksgivingDate(y),'thanksgiving','Happy Thanksgiving!'],
+    ['holiday_christmas',new Date(y,11,25),'christmas','Merry Christmas from Feller’s Espresso Wagon!']
+  ];
+  for(const [key,date,theme,banner] of checks){const hit=holidayWindow(key,date,theme,banner);if(hit)return hit}
+  return ['default',''];}
+function applyTheme(){document.body.className=document.body.className.replace(/\btheme-[^ ]+/g,'').trim();let theme='default',banner='';
+  if(data.theme.mode==='manual'){theme=data.theme.manual||'default'} else if(data.theme.mode==='auto'){[theme,banner]=resolveAutoTheme()}
+  if(theme!=='default') document.body.classList.add('theme-'+theme);
+  const names={halloween:'Happy Halloween!',veterans:'Thank you, Veterans',memorial:'Remembering & honoring on Memorial Day',christmas:'Merry Christmas from Feller’s Espresso Wagon!',thanksgiving:'Happy Thanksgiving!',easter:'Happy Easter!',valentines:'Happy Valentine’s Day!',stpatricks:'Happy St. Patrick’s Day!',labor:'Happy Labor Day!',arbor:'Happy Arbor Day!',presidents:'Presidents Day',birthday:data.theme.birthdayName||'Happy Birthday!',coffee:'Happy Coffee Day!'};
+  themeBanner.textContent=banner||names[theme]||'';
+}
+function compressPhoto(file,cb){const r=new FileReader();r.onload=()=>{const img=new Image();img.onload=()=>{const max=1000,scale=Math.min(1,max/Math.max(img.width,img.height)),c=document.createElement('canvas');c.width=Math.round(img.width*scale);c.height=Math.round(img.height*scale);c.getContext('2d').drawImage(img,0,0,c.width,c.height);cb(c.toDataURL('image/jpeg',.82))};img.src=r.result};r.readAsDataURL(file)}
+function setPreview(el,src){el.src=src||'';el.classList.toggle('show',!!src)}
+function renderCustomer(){
+  applyTheme();
+  const fee=Number(data.feePercent).toFixed(1).replace('.0','');
+  const payText=payment==='cash'?'Cash prices':`Credit / debit • ${fee}% included`;
+  document.getElementById('categorySummary').innerHTML=`Showing <strong>${payText}</strong>`;
+  document.getElementById('menuSummary').innerHTML=`<strong>${payText}</strong>`;
+  renderSpecial('specialCardChoice'); renderSpecial('specialCardMenu');
+  renderNotes('menuNotesChoice'); renderNotes('menuNotes');
+
+  const root=document.getElementById('menu'); root.innerHTML='';
+  const cats=data.categories.filter(cat=>{
+    if(menuFilter==='both') return true;
+    if(menuFilter==='hot') return cat.className==='hot' || cat.className==='snacks';
+    if(menuFilter==='cold') return cat.className==='cold' || cat.className==='snacks';
+    return true;
+  });
+  cats.forEach(cat=>{
+    const sec=document.createElement('section'); sec.className=`panel category ${esc(cat.className||'')}`;
+    sec.innerHTML=`<h2 class="category-title">${esc(cat.name)}</h2>${cat.subtitle?`<div class="category-sub">${esc(cat.subtitle)}</div>`:''}`;
+    cat.items.forEach(item=>{
+      const feature=item.image_url?{src:item.image_url,copy:item.description||''}:featuredFor(cat.name,item.name);
+      const el=document.createElement('div'); el.className='item'+(item.available?'':' sold')+(feature?' clickable':'');
+      const one=item.sizes.length===1;
+      const thumb=feature?`<img class="drink-thumb" src="${feature.src}" alt="" loading="lazy">`:'';
+      const hint=feature?`<div class="photo-hint">Tap for photo & details ›</div>`:'';
+      el.innerHTML=`<div class="item-head"><div class="item-media">${thumb}<div><div class="item-name">${esc(item.name)}</div>${item.description?`<div class="item-desc">${esc(item.description)}</div>`:''}${hint}</div></div>${one?`<div class="simple-price">${displayPrice(item.sizes[0][1])}</div>`:''}</div>${one?'':`<div class="prices">${item.sizes.map(sz=>`<span class="price-pill">${esc(sz[0])} · <b>${displayPrice(sz[1])}</b></span>`).join('')}</div>`}`;
+      if(feature){el.tabIndex=0;el.setAttribute('role','button');el.setAttribute('aria-label',`View ${item.name} photo and details`);el.onclick=()=>openDrinkDetail(cat,item,feature);el.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();openDrinkDetail(cat,item,feature)}}}
+      sec.appendChild(el);
+    }); root.appendChild(sec);
+  });
+  const label=menuFilter==='hot'?'Hot Menu':menuFilter==='cold'?'Cold Menu':'Full Menu';
+  document.getElementById('menuHeadingTitle').textContent=label;
+  document.getElementById('menuHeadingSub').textContent=menuFilter==='both'?'Hot drinks, cold drinks, snacks & more.':`${label.replace(' Menu','')} drinks plus snacks & other items.`;
+}
+
+document.querySelectorAll('.pay-choice').forEach(b=>b.onclick=()=>{payment=b.dataset.pay;renderCustomer();showFlow('categoryStep')});
+document.querySelectorAll('.category-choice').forEach(b=>b.onclick=()=>{menuFilter=b.dataset.filter;renderCustomer();showFlow('menuStep')});
+document.getElementById('backToPayment').onclick=()=>showFlow('paymentStep');
+document.getElementById('backToCategory').onclick=()=>showFlow('categoryStep');
+document.getElementById('changePayment').onclick=()=>showFlow('paymentStep');
+
+
+document.getElementById('adminToggle').onclick=()=>{customerView.classList.add('hide');loginView.classList.add('show');pinInput.focus()};
+document.getElementById('cancelLogin').onclick=showCustomer;
+document.getElementById('loginBtn').onclick=async()=>{
+  const pin=pinInput.value.trim(); loginStatus.textContent='Checking PIN…';
+  if(!/^\d{6}$/.test(pin)){loginStatus.textContent='Use the 6-digit staff PIN.';return;}
+  await sb.auth.signOut();
+  try{
+    const resp=await fetch('/.netlify/functions/staff-login',{
+      method:'POST',
+      headers:{'content-type':'application/json'},
+      body:JSON.stringify({pin})
+    });
+    const result=await resp.json().catch(()=>({}));
+    if(!resp.ok){loginStatus.textContent=result.error||'Incorrect PIN.';return;}
+    const verified=await sb.auth.verifyOtp({email:result.email,token:result.otp,type:'email'});
+    if(verified.error){loginStatus.textContent='Could not start staff session.';return;}
+    const uid=verified.data.user?.id;
+    const {data:roleRow,error:roleErr}=await sb.from('staff_roles').select('role').eq('user_id',uid).single();
+    if(roleErr||!roleRow||roleRow.role!==result.role){await sb.auth.signOut();loginStatus.textContent='Staff role is not configured correctly.';return;}
+    currentRole=roleRow.role; loginView.classList.remove('show'); loginStatus.textContent=''; pinInput.value='';
+    await loadLiveMenu();
+    if(currentRole==='manager'){adminView.classList.add('show');loadAdmin();}
+    else if(currentRole==='employee'){employeeView.classList.add('show');loadEmployee();}
+    else {await sb.auth.signOut();showCustomer();}
+  }catch(err){
+    console.error(err);
+    loginStatus.textContent='Staff login is temporarily unavailable.';
+  }
+};
+pinInput.addEventListener('keydown',e=>{if(e.key==='Enter')loginBtn.click()});
+document.getElementById('exitAdmin').onclick=showCustomer;
+document.getElementById('exitEmployee').onclick=showCustomer;
+async function showCustomer(){loginView.classList.remove('show');adminView.classList.remove('show');employeeView.classList.remove('show');customerView.classList.remove('hide');pinInput.value='';loginStatus.textContent='';currentRole=null;await sb.auth.signOut();await loadLiveMenu();renderCustomer();window.scrollTo({top:0,behavior:'smooth'})}
+
+function loadAdmin(){
+  adminFee.value=data.feePercent;
+  adminPin.closest('.field').style.display='none'; employeePin.closest('.field').style.display='none';
+  specialAvailable.value=String(data.special.available); specialName.value=data.special.name; specialPrice.value=data.special.price; specialDesc.value=data.special.description; setPreview(specialPreview,data.special.photo);
+  themeMode.value=data.theme.mode; manualTheme.value=data.theme.manual; birthdayDate.value=data.theme.birthdayDate||''; birthdayName.value=data.theme.birthdayName||'';
+  renderAdminItems();
+}
+function priceFieldsFor(it){
+  if(it.categoryKey==='hot') return [['Tall · 12 oz','price_tall'],['Grande · 16 oz','price_grande'],['Mondo · 20 oz','price_mondo']];
+  if(it.categoryKey==='blended'||it.categoryKey==='over-ice') return [['16 oz','price_16oz'],['24 oz','price_24oz']];
+  return [['Price','single_price']];
+}
+function sizeValue(it,label){const found=it.sizes.find(x=>x[0]===label);return found?Number(found[1]):0}
+function renderAdminItems(){
+  const root=document.getElementById('adminMenu');root.innerHTML='';
+  data.categories.forEach((cat,ci)=>{
+    const p=document.createElement('div');p.className='panel';p.innerHTML=`<div style="display:flex;justify-content:space-between;gap:10px;align-items:center"><h2>${esc(cat.name)}</h2><button class="btn secondary" data-add-cat="${ci}">+ Add item</button></div>`;
+    cat.items.forEach((it,ii)=>{
+      const box=document.createElement('div');box.className='admin-item';
+      const priceInputs=priceFieldsFor(it).map(([label])=>{const v=sizeValue(it,label);return `<div class="field"><label>${esc(label)} cash price</label><input data-size-price="${ci}:${ii}:${label}" type="number" step="0.01" min="0" value="${Number(v).toFixed(2)}"></div>`}).join('');
+      box.innerHTML=`<div class="grid"><div class="field"><label>Item</label><input data-item-name="${ci}:${ii}" value="${esc(it.name)}"></div><div class="field"><label>Available</label><select data-item-avail="${ci}:${ii}"><option value="true" ${it.available?'selected':''}>Yes</option><option value="false" ${!it.available?'selected':''}>No / sold out</option></select></div></div><div class="field"><label>Description</label><input data-item-desc="${ci}:${ii}" value="${esc(it.description||'')}"></div><div class="grid">${priceInputs}</div><div class="field"><label>Drink / item photo</label><input data-item-photo="${ci}:${ii}" type="file" accept="image/*" capture="environment">${it.image_url?`<img class="image-preview show" src="${it.image_url}" alt="Photo preview">`:''}</div><button class="btn secondary" data-remove-photo="${ci}:${ii}">Remove photo</button><button class="btn danger" data-delete-item="${ci}:${ii}">Delete item</button>`;
+      p.appendChild(box);
+    });root.appendChild(p);
+  });
+  root.querySelectorAll('[data-add-cat]').forEach(b=>b.onclick=()=>addMenuItem(Number(b.dataset.addCat)));
+  root.querySelectorAll('[data-delete-item]').forEach(b=>b.onclick=()=>deleteMenuItem(...b.dataset.deleteItem.split(':').map(Number)));
+  root.querySelectorAll('[data-remove-photo]').forEach(b=>b.onclick=()=>removeItemPhoto(...b.dataset.removePhoto.split(':').map(Number)));
+  root.querySelectorAll('[data-item-photo]').forEach(inp=>inp.onchange=e=>{const [ci,ii]=inp.dataset.itemPhoto.split(':').map(Number);const f=e.target.files[0];if(f)uploadItemPhoto(ci,ii,f)});
+}
+function syncAdmin(){
+  data.feePercent=Number(adminFee.value)||0;
+  data.theme.mode=themeMode.value;data.theme.manual=manualTheme.value;data.theme.birthdayDate=birthdayDate.value.trim();data.theme.birthdayName=birthdayName.value.trim();
+  data.special.available=specialAvailable.value==='true';data.special.name=specialName.value.trim();data.special.price=Number(specialPrice.value)||0;data.special.description=specialDesc.value.trim();
+  document.querySelectorAll('[data-item-name]').forEach(x=>{const[c,i]=x.dataset.itemName.split(':').map(Number);data.categories[c].items[i].name=x.value.trim()});
+  document.querySelectorAll('[data-item-desc]').forEach(x=>{const[c,i]=x.dataset.itemDesc.split(':').map(Number);data.categories[c].items[i].description=x.value.trim()});
+  document.querySelectorAll('[data-item-avail]').forEach(x=>{const[c,i]=x.dataset.itemAvail.split(':').map(Number);data.categories[c].items[i].available=x.value==='true'});
+  document.querySelectorAll('[data-size-price]').forEach(x=>{const[c,i,label]=x.dataset.sizePrice.split(':');const it=data.categories[Number(c)].items[Number(i)];const f=it.sizes.find(z=>z[0]===label);if(f)f[1]=Number(x.value)||0});
+}
+function loadEmployee(){empSpecialAvailable.value=String(data.special.available);empSpecialName.value=data.special.name;empSpecialPrice.value=data.special.price;empSpecialDesc.value=data.special.description;setPreview(empSpecialPreview,data.special.photo)}
+async function uploadImage(file,path){
+  const ext=(file.name.split('.').pop()||'jpg').toLowerCase().replace(/[^a-z0-9]/g,'')||'jpg';
+  const finalPath=`${path}.${ext}`;
+  const {error}=await sb.storage.from('menu-images').upload(finalPath,file,{upsert:true,contentType:file.type||'image/jpeg'}); if(error) throw error;
+  return sb.storage.from('menu-images').getPublicUrl(finalPath).data.publicUrl+`?v=${Date.now()}`;
+}
+async function uploadItemPhoto(ci,ii,file){saveStatus.textContent='Uploading photo…';try{const it=data.categories[ci].items[ii];it.image_url=await uploadImage(file,`menu-items/${it.id}-${Date.now()}`);await sb.from('menu_items').update({image_url:it.image_url}).eq('id',it.id);saveStatus.textContent='Photo updated.';renderAdminItems();}catch(e){saveStatus.textContent='Photo upload failed: '+e.message}}
+async function removeItemPhoto(ci,ii){const it=data.categories[ci].items[ii];it.image_url='';const {error}=await sb.from('menu_items').update({image_url:null}).eq('id',it.id);saveStatus.textContent=error?error.message:'Photo removed.';renderAdminItems()}
+async function deleteMenuItem(ci,ii){const it=data.categories[ci].items[ii];if(!confirm(`Delete ${it.name}? This cannot be undone.`))return;const {error}=await sb.from('menu_items').delete().eq('id',it.id);if(error){saveStatus.textContent=error.message;return;}await loadLiveMenu();loadAdmin();saveStatus.textContent='Item deleted.'}
+async function addMenuItem(ci){const cat=data.categories[ci];const name=prompt(`New item name for ${cat.name}:`);if(!name)return;const key=cat.items[0]?.categoryKey || (cat.className==='hot'?'hot':cat.name.includes('Blended')?'blended':cat.name.includes('Over Ice')?'over-ice':cat.name.includes('Add')?'addon':'snacks');let row={name:name.trim(),category:key,description:'',available:true,sort_order:Math.max(0,...cat.items.map(x=>x.id||0))+100};if(key==='hot'){row.price_tall=0;row.price_grande=0;row.price_mondo=0}else if(key==='blended'||key==='over-ice'){row.price_16oz=0;row.price_24oz=0}else row.single_price=0;const {error}=await sb.from('menu_items').insert(row);if(error){saveStatus.textContent=error.message;return;}await loadLiveMenu();loadAdmin();saveStatus.textContent='New item added. Set its prices and save.'}
+function itemPatch(it){const p={name:it.name,description:it.description||null,available:!!it.available,image_url:it.image_url||null};if(it.categoryKey==='hot'){p.price_tall=sizeValue(it,'Tall · 12 oz');p.price_grande=sizeValue(it,'Grande · 16 oz');p.price_mondo=sizeValue(it,'Mondo · 20 oz')}else if(it.categoryKey==='blended'||it.categoryKey==='over-ice'){p.price_16oz=sizeValue(it,'16 oz');p.price_24oz=sizeValue(it,'24 oz')}else p.single_price=sizeValue(it,'Price');return p}
+async function saveSpecialFromEmployee(){
+  const patch={active:empSpecialAvailable.value==='true',name:empSpecialName.value.trim(),cash_price:Number(empSpecialPrice.value)||0,description:empSpecialDesc.value.trim(),image_url:data.special.photo||null};
+  const {error}=await sb.from('daily_special').update(patch).eq('id',data.special.id); if(error) throw error;
+}
+async function saveSpecialFromManager(){
+  const patch={active:specialAvailable.value==='true',name:specialName.value.trim(),cash_price:Number(specialPrice.value)||0,description:specialDesc.value.trim(),image_url:data.special.photo||null};
+  const {error}=await sb.from('daily_special').update(patch).eq('id',data.special.id); if(error) throw error;
+}
+async function updateSetting(key,value){const {error}=await sb.from('site_settings').update({setting_value:value,updated_at:new Date().toISOString()}).eq('setting_key',key);if(error)throw error;liveSettings[key]=value}
+specialPhoto.onchange=e=>{const f=e.target.files[0];if(f){saveStatus.textContent='Uploading special photo…';uploadImage(f,`daily-special/special-${Date.now()}`).then(async url=>{data.special.photo=url;setPreview(specialPreview,url);await sb.from('daily_special').update({image_url:url}).eq('id',data.special.id);saveStatus.textContent='Special photo updated.'}).catch(err=>saveStatus.textContent=err.message)}};
+empSpecialPhoto.onchange=e=>{const f=e.target.files[0];if(f){employeeStatus.textContent='Uploading photo…';uploadImage(f,`daily-special/special-${Date.now()}`).then(async url=>{data.special.photo=url;setPreview(empSpecialPreview,url);await sb.from('daily_special').update({image_url:url}).eq('id',data.special.id);employeeStatus.textContent='Photo updated.'}).catch(err=>employeeStatus.textContent=err.message)}};
+removeSpecialPhoto.onclick=async()=>{data.special.photo='';setPreview(specialPreview,'');const {error}=await sb.from('daily_special').update({image_url:null}).eq('id',data.special.id);saveStatus.textContent=error?error.message:'Special photo removed.'};
+empRemovePhoto.onclick=async()=>{data.special.photo='';setPreview(empSpecialPreview,'');const {error}=await sb.from('daily_special').update({image_url:null}).eq('id',data.special.id);employeeStatus.textContent=error?error.message:'Special photo removed.'};
+saveEmployee.onclick=async()=>{employeeStatus.textContent='Saving…';try{await saveSpecialFromEmployee();employeeStatus.textContent='Daily special saved live.';await loadLiveMenu();loadEmployee()}catch(e){employeeStatus.textContent='Save failed: '+e.message}};
+saveBtn.onclick=async()=>{saveStatus.textContent='Saving live changes…';try{syncAdmin();for(const cat of data.categories){for(const it of cat.items){const {error}=await sb.from('menu_items').update(itemPatch(it)).eq('id',it.id);if(error)throw error;}}await saveSpecialFromManager();const pricing={...(liveSettings.pricing||{}),card_fee_percent:Number(data.feePercent)};await updateSetting('pricing',pricing);const theme={...(liveSettings.theme||{}),mode:data.theme.mode==='auto'?'automatic':data.theme.mode,manual_theme:data.theme.manual};await updateSetting('theme',theme);const birthday={...(liveSettings.birthday||{}),date:data.theme.birthdayDate,message:data.theme.birthdayName,enabled:!!data.theme.birthdayDate};await updateSetting('birthday',birthday);saveStatus.textContent='All manager changes saved live.';await loadLiveMenu();loadAdmin()}catch(e){saveStatus.textContent='Save failed: '+e.message}};
+
+const HOLIDAYS=[
+  ['holiday_christmas','Christmas'],['holiday_thanksgiving','Thanksgiving'],['holiday_veterans_day','Veterans Day'],['holiday_memorial_day','Memorial Day'],['holiday_valentines','Valentine’s Day'],['holiday_st_patricks','St. Patrick’s Day'],['holiday_labor_day','Labor Day'],['holiday_presidents_day','Presidents Day'],['holiday_easter','Easter'],['holiday_arbor_day','Arbor Day'],['holiday_national_coffee_day','National Coffee Day']
+];
+function holidayConfig(key){return liveSettings[key]||{enabled:true,days_before:0,days_after:0}}
+function renderHolidayControls(){
+  holidayControls.innerHTML=HOLIDAYS.map(([key,name])=>{const c=holidayConfig(key);return `<div class="holiday-row"><div class="holiday-name">${esc(name)}</div><div class="field"><label>Days before</label><input type="number" min="0" max="45" step="1" data-holiday-before="${key}" value="${Number(c.days_before??0)}"></div><div class="field"><label>Days after</label><input type="number" min="0" max="45" step="1" data-holiday-after="${key}" value="${Number(c.days_after??0)}"></div></div>`}).join('');
+}
+function loadAdmin(){
+  adminFee.value=data.feePercent;
+  specialAvailable.value=String(data.special.available);specialName.value=data.special.name;specialPrice.value=data.special.price;specialDesc.value=data.special.description;setPreview(specialPreview,data.special.photo);
+  themeMode.value=data.theme.mode;manualTheme.value=data.theme.manual;birthdayDate.value=data.theme.birthdayDate||'';birthdayName.value=data.theme.birthdayName||'';
+  coffeeHeadline.value=liveSettings.coffee_story?.headline||'Roasted Locally. Served Fresh.';coffeeMessage.value=liveSettings.coffee_story?.message||'We roast our own espresso beans locally for a fresher cup, from our roaster to your drink.';
+  renderHolidayControls();renderAdminItems();
+}
+function compactPriceText(it){return it.sizes.map(x=>money(x[1])).join(' / ')}
+function renderAdminItems(){
+  const root=document.getElementById('adminMenu');root.innerHTML='';const q=(menuSearch?.value||'').trim().toLowerCase();
+  data.categories.forEach((cat,ci)=>{
+    const matches=cat.items.map((it,ii)=>({it,ii})).filter(({it})=>!q||`${it.name} ${it.description||''}`.toLowerCase().includes(q));
+    if(!matches.length)return;
+    const group=document.createElement('div');group.className='admin-category';group.innerHTML=`<div class="admin-category-head"><h3>${esc(cat.name)}</h3><button class="btn secondary" data-add-cat="${ci}">+ Add item</button></div>`;
+    matches.forEach(({it,ii})=>{
+      const box=document.createElement('details');box.className='admin-compact-item';
+      const priceInputs=priceFieldsFor(it).map(([label])=>`<div class="field"><label>${esc(label)} cash price</label><input data-size-price="${ci}:${ii}:${label}" type="number" step="0.01" min="0" value="${Number(sizeValue(it,label)).toFixed(2)}"></div>`).join('');
+      box.innerHTML=`<summary><div class="admin-compact-name">${esc(it.name)}${it.available?'':'<span class="sold-badge">SOLD OUT</span>'}</div><div class="admin-compact-price">${compactPriceText(it)} · Edit ›</div></summary><div class="admin-compact-edit"><div class="setting-row"><div class="field"><label>Item</label><input data-item-name="${ci}:${ii}" value="${esc(it.name)}"></div><div class="field"><label>Availability</label><select data-item-avail="${ci}:${ii}"><option value="true" ${it.available?'selected':''}>Available</option><option value="false" ${!it.available?'selected':''}>Sold out / hidden</option></select></div></div><div class="field"><label>Description</label><input data-item-desc="${ci}:${ii}" value="${esc(it.description||'')}"></div><div class="setting-row">${priceInputs}</div><div class="compact-photo-row">${it.image_url?`<img class="image-preview show" src="${it.image_url}" alt="Photo preview">`:''}<div class="field" style="flex:1;min-width:210px"><label>Replace / add photo</label><input data-item-photo="${ci}:${ii}" type="file" accept="image/*" capture="environment"></div></div><button class="btn secondary" data-remove-photo="${ci}:${ii}">Remove photo</button><button class="btn danger" data-delete-item="${ci}:${ii}">Delete permanently</button></div>`;
+      group.appendChild(box);
+    });root.appendChild(group);
+  });
+  root.querySelectorAll('[data-add-cat]').forEach(b=>b.onclick=()=>addMenuItem(Number(b.dataset.addCat)));
+  root.querySelectorAll('[data-delete-item]').forEach(b=>b.onclick=()=>deleteMenuItem(...b.dataset.deleteItem.split(':').map(Number)));
+  root.querySelectorAll('[data-remove-photo]').forEach(b=>b.onclick=()=>removeItemPhoto(...b.dataset.removePhoto.split(':').map(Number)));
+  root.querySelectorAll('[data-item-photo]').forEach(inp=>inp.onchange=e=>{const [ci,ii]=inp.dataset.itemPhoto.split(':').map(Number);const f=e.target.files[0];if(f)uploadItemPhoto(ci,ii,f)});
+}
+function syncAdmin(){
+  data.feePercent=Number(adminFee.value)||0;data.theme.mode=themeMode.value;data.theme.manual=manualTheme.value;data.theme.birthdayDate=birthdayDate.value.trim();data.theme.birthdayName=birthdayName.value.trim();
+  data.special.available=specialAvailable.value==='true';data.special.name=specialName.value.trim();data.special.price=Number(specialPrice.value)||0;data.special.description=specialDesc.value.trim();
+  document.querySelectorAll('[data-item-name]').forEach(x=>{const[c,i]=x.dataset.itemName.split(':').map(Number);data.categories[c].items[i].name=x.value.trim()});
+  document.querySelectorAll('[data-item-desc]').forEach(x=>{const[c,i]=x.dataset.itemDesc.split(':').map(Number);data.categories[c].items[i].description=x.value.trim()});
+  document.querySelectorAll('[data-item-avail]').forEach(x=>{const[c,i]=x.dataset.itemAvail.split(':').map(Number);data.categories[c].items[i].available=x.value==='true'});
+  document.querySelectorAll('[data-size-price]').forEach(x=>{const[c,i,label]=x.dataset.sizePrice.split(':');const it=data.categories[Number(c)].items[Number(i)];const f=it.sizes.find(z=>z[0]===label);if(f)f[1]=Number(x.value)||0});
+}
+menuSearch.addEventListener('input',renderAdminItems);clearMenuSearch.onclick=()=>{menuSearch.value='';renderAdminItems();menuSearch.focus()};
+async function saveHolidaySettings(){for(const [key] of HOLIDAYS){const before=Number(document.querySelector(`[data-holiday-before="${key}"]`)?.value||0),after=Number(document.querySelector(`[data-holiday-after="${key}"]`)?.value||0);const existing=holidayConfig(key);await updateSetting(key,{...existing,enabled:existing.enabled!==false,days_before:before,days_after:after})}}
+async function changePin(target){
+  const isManager=target==='manager',a=isManager?managerNewPin:employeeNewPin,b=isManager?managerConfirmPin:employeeConfirmPin,btn=isManager?changeManagerPin:changeEmployeePin;const pin=a.value.trim(),confirmPin=b.value.trim();
+  pinChangeStatus.textContent='';if(!/^\d{6}$/.test(pin)){pinChangeStatus.textContent='Use exactly 6 digits.';return}if(pin!==confirmPin){pinChangeStatus.textContent='The two PIN entries do not match.';return}if(!confirm(`Change the ${target} PIN now? The old PIN will stop working immediately.`))return;
+  btn.disabled=true;pinChangeStatus.textContent='Changing PIN…';const {data:resp,error}=await sb.rpc('change_staff_pin',{p_target_role:target,p_new_pin:pin});btn.disabled=false;
+  if(error){pinChangeStatus.textContent='PIN change failed: '+error.message;return}a.value='';b.value='';pinChangeStatus.textContent=`${target==='manager'?'Manager':'Employee'} PIN updated successfully.`;
+}
+changeManagerPin.onclick=()=>changePin('manager');changeEmployeePin.onclick=()=>changePin('employee');
+saveBtn.onclick=async()=>{saveStatus.textContent='Saving live changes…';try{syncAdmin();for(const cat of data.categories){for(const it of cat.items){const {error}=await sb.from('menu_items').update(itemPatch(it)).eq('id',it.id);if(error)throw error;}}await saveSpecialFromManager();const pricing={...(liveSettings.pricing||{}),card_fee_percent:Number(data.feePercent)};await updateSetting('pricing',pricing);const theme={...(liveSettings.theme||{}),mode:data.theme.mode==='auto'?'automatic':data.theme.mode,manual_theme:data.theme.manual};await updateSetting('theme',theme);const birthday={...(liveSettings.birthday||{}),date:data.theme.birthdayDate,message:data.theme.birthdayName,enabled:!!data.theme.birthdayDate};await updateSetting('birthday',birthday);await updateSetting('coffee_story',{...(liveSettings.coffee_story||{}),enabled:true,headline:coffeeHeadline.value.trim()||'Roasted Locally. Served Fresh.',message:coffeeMessage.value.trim()});await saveHolidaySettings();saveStatus.textContent='Manager changes saved live.';await loadLiveMenu();loadAdmin()}catch(e){saveStatus.textContent='Save failed: '+e.message}};
+
+detailClose.onclick=closeDrinkDetail;
+drinkDetail.addEventListener('click',e=>{if(e.target===drinkDetail)closeDrinkDetail()});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&drinkDetail.classList.contains('show'))closeDrinkDetail()});
+loadLiveMenu();
+</script>
+</body>
+</html>
